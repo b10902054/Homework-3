@@ -61,7 +61,11 @@ class EqualWeightPortfolio:
         """
         TODO: Complete Task 1 Below
         """
+        equal_weight = 1 / len(assets)
 
+        for date in self.portfolio_weights.index:
+            for asset in assets:
+                self.portfolio_weights.loc[date, asset] = equal_weight
         """
         TODO: Complete Task 1 Above
         """
@@ -112,7 +116,21 @@ class RiskParityPortfolio:
         """
         TODO: Complete Task 2 Below
         """
+        # assets = df.columns[df.columns != self.exclude]
 
+        for i in range(self.lookback, len(df_returns)):
+            # Lookback window of returns
+            returns_window = df_returns[assets].iloc[i - self.lookback:i]
+
+            # Compute asset volatilities (standard deviation)
+            vol = returns_window.std()
+
+            # Inverse volatility weights
+            inv_vol = 1 / vol
+            weights = inv_vol / inv_vol.sum()
+
+            # Assign weights for the current day
+            self.portfolio_weights.loc[df_returns.index[i], assets] = weights.values
         """
         TODO: Complete Task 2 Above
         """
