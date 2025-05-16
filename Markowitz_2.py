@@ -69,7 +69,22 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
+        for t in range(self.lookback, len(self.price)):
+            # Get return window
+            window = self.price.iloc[t - self.lookback:t][assets]
+            if window.isnull().values.any():
+                continue
 
+            # Equal weight allocation for remaining assets
+            n_assets = len(assets)
+            for asset in assets:
+                self.portfolio_weights.at[self.price.index[t], asset] = 1 / n_assets
+
+            # Set SPY to 0
+            self.portfolio_weights.at[self.price.index[t], self.exclude] = 0
+
+        self.portfolio_weights.ffill(inplace=True)
+        self.portfolio_weights.fillna(0, inplace=True)
         """
         TODO: Complete Task 4 Above
         """
