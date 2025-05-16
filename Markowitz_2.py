@@ -58,39 +58,37 @@ class MyPortfolio:
         self.gamma = gamma
 
     def calculate_weights(self):
-        # Get the assets by excluding the specified column
         assets = self.price.columns[self.price.columns != self.exclude]
+        self.portfolio_weights = pd.DataFrame(index=self.price.index, columns=self.price.columns)
 
-        # Calculate the portfolio weights
-        self.portfolio_weights = pd.DataFrame(
-            index=self.price.index, columns=self.price.columns
-        )
-
-        """
-        TODO: Complete Task 4 Below
-        """
         for t in range(self.lookback, len(self.price)):
-            # Get return window
             window = self.price.iloc[t - self.lookback:t][assets]
+
             if window.isnull().values.any():
                 continue
 
-            # Equal weight allocation for remaining assets
-            n_assets = len(assets)
-            for asset in assets:
-                self.portfolio_weights.at[self.price.index[t], asset] = 1 / n_assets
+            # 1. Calculate past momentum (last day price / first day price)
+            momentum = window.iloc[-1] / window.iloc[0] - 1
 
-            # Set SPY to 0
-            # self.portfolio_weights.at[self.price.index[t], self.exclude] = 0
+            # 2. Calculate volatility
+            vol = window.pct_change().std()
 
-        self.portfolio_weights.ffill(inplace=True)
+            # 3. Compute scores = momentum / vol (risk-adjusted momentum)
+            scores = momentum / vol
+            scores = scores.clip(lower=0)  # Avoid negative weights
+
+            if scores.sum() == 0:
+                weights = pd.Series(1 / len(scores), index=scores.index)
+            else:
+                weights = scores / scores.sum()
+
+            # Store weights
+            for asset in weights.index:
+                self.portfolio_weights.at[self.price.index[t], asset] = weights[asset]
+
+        self.portfolio_weights.fillna(method='ffill', inplace=True)
         self.portfolio_weights.fillna(0, inplace=True)
-        """
-        TODO: Complete Task 4 Above
-        """
 
-        self.portfolio_weights.ffill(inplace=True)
-        self.portfolio_weights.fillna(0, inplace=True)
 
     def calculate_portfolio_returns(self):
         # Ensure weights are calculated
