@@ -107,36 +107,26 @@ class RiskParityPortfolio:
         self.lookback = lookback
 
     def calculate_weights(self):
-        # Get the assets by excluding the specified column
         assets = df.columns[df.columns != self.exclude]
-
-        # Calculate the portfolio weights
         self.portfolio_weights = pd.DataFrame(index=df.index, columns=df.columns)
 
-        """
-        TODO: Complete Task 2 Below
-        """
         for i in range(self.lookback, len(df)):
-            # Get lookback returns
+            # Rolling window returns
             R_window = df_returns.iloc[i - self.lookback:i][assets]
 
-            # Compute standard deviations (volatility)
+            # Calculate standard deviation of returns
             sigma = R_window.std()
 
-            # Avoid division by zero
-            inv_vol = 1 / sigma.replace(0, np.nan)
-
-            # Normalize to sum to 1
+            # Compute inverse volatility weights
+            inv_vol = 1.0 / sigma
             weights = inv_vol / inv_vol.sum()
 
-            # Assign weights on that day
+            # Store weights in dataframe
             self.portfolio_weights.loc[df.index[i], weights.index] = weights.values
-        """
-        TODO: Complete Task 2 Above
-        """
 
         self.portfolio_weights.ffill(inplace=True)
         self.portfolio_weights.fillna(0, inplace=True)
+
 
     def calculate_portfolio_returns(self):
         # Ensure weights are calculated
